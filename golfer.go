@@ -12,3 +12,9 @@ func Lib(src string) <-chan bool {
 	document.Get("body").Call("appendChild", script)
 	return loaded
 }
+
+// Callback returns a function that when run it fills the following channel.
+func Callback() (func(), <-chan bool) {
+	bc := make(chan bool)
+	return func() { bc <- true }, bc
+}
