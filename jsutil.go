@@ -46,3 +46,18 @@ func Callback() (func(), <-chan bool) {
 	bc := make(chan bool, 1)
 	return func() { bc <- true }, bc
 }
+
+// OnPanic recovers on a panic, filling err.
+func OnPanic(err *error) {
+	e := recover()
+
+	if e == nil {
+		return
+	}
+
+	if e, ok := e.(*js.Error); ok {
+		*err = e
+	} else {
+		panic(e)
+	}
+}
