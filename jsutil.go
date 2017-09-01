@@ -47,6 +47,11 @@ func Callback() (func(), <-chan bool) {
 	return func() { bc <- true }, bc
 }
 
+// Alert calls the global alert function
+func Alert(s string) {
+	js.Global.Call("alert", s)
+}
+
 // OnPanic recovers on a panic, filling err.
 func OnPanic(err *error) {
 	e := recover()
