@@ -9,9 +9,13 @@ var (
 )
 
 func init() {
+	defer func() {
+		recover()
+		return
+	}()
+
 	document = js.Global.Get("document")
 	body = document.Get("body")
-
 	keyboard = document.Call("createElement", "input")
 	keyboard.Set("type", "text")
 	keyboard.Set("id", "keyboard")
@@ -56,4 +60,24 @@ func CloseKeyboard() {
 func Callback() (func(), <-chan bool) {
 	bc := make(chan bool, 1)
 	return func() { bc <- true }, bc
+}
+
+// Alert calls the global alert function
+func Alert(s string) {
+	js.Global.Call("alert", s)
+}
+
+// OnPanic recovers on a panic, filling err.
+func OnPanic(err *error) {
+	e := recover()
+
+	if e == nil {
+		return
+	}
+
+	if e, ok := e.(*js.Error); ok {
+		*err = e
+	} else {
+		panic(e)
+	}
 }
