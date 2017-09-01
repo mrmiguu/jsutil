@@ -9,21 +9,14 @@ var (
 )
 
 func init() {
+	defer func() {
+		recover()
+		return
+	}()
+
 	document = js.Global.Get("document")
-	if document == nil {
-		return
-	}
-
 	body = document.Get("body")
-	if body == nil {
-		return
-	}
-
 	keyboard = document.Call("createElement", "input")
-	if keyboard == nil {
-		return
-	}
-
 	keyboard.Set("type", "text")
 	keyboard.Set("id", "keyboard")
 	keyboard.Get("style").Set("width", 0)
@@ -31,7 +24,6 @@ func init() {
 	keyboard.Get("style").Set("opacity", 0.0)
 	keyboard.Get("style").Set("position", "absolute")
 	keyboard.Set("onclick", func() { keyboard.Call("focus") })
-
 	body.Call("appendChild", keyboard)
 }
 
