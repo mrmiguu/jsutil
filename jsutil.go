@@ -15,8 +15,7 @@ func init() {
 	keyboard = document.Call("createElement", "input")
 	keyboard.Set("type", "text")
 	keyboard.Set("id", "keyboard")
-	keyboard.Get("style").Set("width", 0)
-	keyboard.Get("style").Set("left", -10)
+	keyboard.Get("style").Set("top", -23)
 	keyboard.Get("style").Set("opacity", 0.0)
 	keyboard.Get("style").Set("position", "absolute")
 	keyboard.Set("onclick", func() { keyboard.Call("focus") })
@@ -35,10 +34,22 @@ func Lib(src string) <-chan bool {
 
 // OpenKeyboard pulls up the soft keyboard.
 func OpenKeyboard() <-chan string {
-	input := make(chan string, 1)
-	keyboard.Set("oninput", func() { input <- keyboard.Get("value").String() })
+	txt := make(chan string, 4)
+	keyboard.Set("oninput", func() { txt <- keyboard.Get("value").String() })
+	// keyboard.Set("onkeypress", fn)
+	// keyboard.Set("onkeyup", fn)
+	// keyboard.Set("onselect", fn)
 	keyboard.Call("click")
-	return input
+	return txt
+}
+
+// CloseKeyboard forces the soft keyboard away.
+func CloseKeyboard() {
+	keyboard.Set("oninput", nil)
+	// keyboard.Set("onkeypress", nil)
+	// keyboard.Set("onkeyup", nil)
+	// keyboard.Set("onselect", nil)
+	keyboard.Call("blur")
 }
 
 // Callback returns a function that when run it fills the following channel.
