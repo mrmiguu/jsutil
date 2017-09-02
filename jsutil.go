@@ -67,6 +67,15 @@ func Alert(s string) {
 	js.Global.Call("alert", s)
 }
 
+// Prompt prompts the user for a response with an optional title.
+func Prompt(s ...string) string {
+	msg := ""
+	if len(s) > 0 {
+		msg = s[0]
+	}
+	return js.Global.Call("prompt", msg).String()
+}
+
 // OnPanic recovers on a panic, filling err.
 func OnPanic(err *error) {
 	e := recover()
