@@ -26,12 +26,19 @@ func init() {
 	body.Call("appendChild", keyboard)
 }
 
-// Lib appends a JavaScript library to the DOM and loads it.
-func Lib(src string) <-chan bool {
-	loaded := make(chan bool, 1)
+// Load appends a JavaScript library to the DOM and loads it.
+func Load(url string, alt ...string) <-chan bool {
+	loaded := make(chan bool)
 	script := document.Call("createElement", "script")
-	script.Set("src", src)
-	script.Set("onload", func() { loaded <- true })
+	script.Set("src", url)
+	script.Set("onload", F(func() { loaded <- true }))
+	script.Set("onerror", F(func() {
+		if len(alt) < 1 {
+			loaded <- false
+		} else {
+			loaded <- <-Load(alt[0], alt[1:]...)
+		}
+	}))
 	body.Call("appendChild", script)
 	return loaded
 }
@@ -56,19 +63,30 @@ func CloseKeyboard() {
 	keyboard.Call("blur")
 }
 
-// Callback returns a function that when run it fills the following channel.
-func Callback() (func(), <-chan bool) {
-	bc := make(chan bool, 1)
-	return func() { bc <- true }, bc
+// F relieves callbacks completely from blocking.
+func F(f func()) func() {
+	return func() { go f() }
+}
+
+// C returns a function that when run it fills the following channel.
+func C() (func(), <-chan bool) {
+	c := make(chan bool)
+	return F(func() { c <- true }), c
 }
 
 // Alert calls the global alert function
 func Alert(s string) {
+	if js.Global == nil {
+		return
+	}
 	js.Global.Call("alert", s)
 }
 
 // Prompt prompts the user for a response with an optional title.
 func Prompt(s ...string) string {
+	if js.Global == nil {
+		return ""
+	}
 	msg := ""
 	if len(s) > 0 {
 		msg = s[0]
