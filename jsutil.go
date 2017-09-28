@@ -1,6 +1,7 @@
 package jsutil
 
 import "github.com/gopherjs/gopherjs/js"
+import "strings"
 
 var (
 	document *js.Object
@@ -26,20 +27,37 @@ func init() {
 	body.Call("appendChild", keyboard)
 }
 
+func extension(file string) string {
+	return file[strings.LastIndex(file, "."):]
+}
+
 // Load appends a JavaScript library to the DOM and loads it.
 func Load(url string, alt ...string) <-chan bool {
 	loaded := make(chan bool)
-	script := document.Call("createElement", "script")
-	script.Set("src", url)
-	script.Set("onload", F(func() { loaded <- true }))
-	script.Set("onerror", F(func() {
+
+	var file *js.Object
+
+	switch extension(url) {
+	case ".js":
+		file = document.Call("createElement", "script")
+		file.Set("src", url)
+	case ".css":
+		file = document.Call("createElement", "link")
+		file.Set("rel", "stylesheet")
+		file.Set("href", url)
+	default:
+		panic("bad file type")
+	}
+
+	file.Set("onload", F(func() { loaded <- true }))
+	file.Set("onerror", F(func() {
 		if len(alt) < 1 {
 			loaded <- false
 		} else {
 			loaded <- <-Load(alt[0], alt[1:]...)
 		}
 	}))
-	body.Call("appendChild", script)
+	body.Call("appendChild", file)
 	return loaded
 }
 
