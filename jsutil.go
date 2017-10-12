@@ -118,7 +118,7 @@ func OnPanic(err ...*error) {
 
 	if len(err) > 1 {
 		Alert("OnPanic: too many arguments")
-		return
+		panic("too many arguments")
 	}
 
 	if r == nil {
@@ -136,6 +136,7 @@ func OnPanic(err ...*error) {
 			*err[0] = e
 		default:
 			Alert("OnPanic: unknown panic")
+			panic("unknown panic")
 		}
 		return
 	}
@@ -143,11 +144,15 @@ func OnPanic(err ...*error) {
 	switch e := r.(type) {
 	case *js.Error:
 		Alert("panic: " + e.Error())
+		panic(e.Error())
 	case string:
 		Alert("panic: " + e)
+		panic(e)
 	case error:
 		Alert("panic: " + e.Error())
+		panic(e.Error())
 	default:
 		Alert("OnPanic: unknown panic")
+		panic("unknown panic")
 	}
 }
