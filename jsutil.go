@@ -4,9 +4,10 @@ import "github.com/gopherjs/gopherjs/js"
 import "strings"
 
 var (
-	document *js.Object
-	body     *js.Object
-	keyboard *js.Object
+	document  *js.Object
+	body      *js.Object
+	keyboard  *js.Object
+	keybuffer chan string
 )
 
 func init() {
@@ -16,7 +17,6 @@ func init() {
 	}()
 
 	document = js.Global.Get("document")
-	body = document.Get("body")
 	keyboard = document.Call("createElement", "input")
 	keyboard.Set("type", "text")
 	keyboard.Set("id", "keyboard")
@@ -24,6 +24,7 @@ func init() {
 	keyboard.Get("style").Set("opacity", 0.0)
 	keyboard.Get("style").Set("position", "absolute")
 	keyboard.Set("onclick", func() { keyboard.Call("focus") })
+	body = document.Get("body")
 	body.Call("appendChild", keyboard)
 }
 
@@ -63,17 +64,18 @@ func Load(url string, alt ...string) <-chan bool {
 
 // OpenKeyboard pulls up the soft keyboard.
 func OpenKeyboard() <-chan string {
-	txt := make(chan string, 4)
-	keyboard.Set("oninput", func() { txt <- keyboard.Get("value").String() })
+	keybuffer = make(chan string, 4)
+	keyboard.Set("oninput", F(func() { keybuffer <- keyboard.Get("value").String() }))
 	// keyboard.Set("onkeypress", fn)
 	// keyboard.Set("onkeyup", fn)
 	// keyboard.Set("onselect", fn)
 	keyboard.Call("click")
-	return txt
+	return keybuffer
 }
 
 // CloseKeyboard forces the soft keyboard away.
 func CloseKeyboard() {
+	close(keybuffer)
 	keyboard.Set("oninput", nil)
 	// keyboard.Set("onkeypress", nil)
 	// keyboard.Set("onkeyup", nil)
@@ -94,17 +96,11 @@ func C() (func(), <-chan bool) {
 
 // Alert calls the global alert function
 func Alert(s string) {
-	if js.Global == nil {
-		return
-	}
 	js.Global.Call("alert", s)
 }
 
 // Prompt prompts the user for a response with an optional title.
 func Prompt(s ...string) string {
-	if js.Global == nil {
-		return ""
-	}
 	msg := ""
 	if len(s) > 0 {
 		msg = s[0]
