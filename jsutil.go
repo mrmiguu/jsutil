@@ -112,6 +112,23 @@ func Prompt(s ...string) string {
 	return js.Global.Call("prompt", msg).String()
 }
 
+// Panic panics in a JavaScript-friendly way.
+func Panic(arg interface{}) {
+	var err string
+	switch x := arg.(type) {
+	case string:
+		err = x
+	case *js.Error:
+		err = x.Error()
+	case error:
+		err = x.Error()
+	default:
+		err = "unknown panic"
+	}
+	Alert("panic: " + err)
+	panic(err)
+}
+
 // OnPanic recovers on a panic, filling err.
 func OnPanic(err ...*error) {
 	r := recover()
@@ -141,18 +158,5 @@ func OnPanic(err ...*error) {
 		return
 	}
 
-	switch e := r.(type) {
-	case *js.Error:
-		Alert("panic: " + e.Error())
-		panic(e.Error())
-	case string:
-		Alert("panic: " + e)
-		panic(e)
-	case error:
-		Alert("panic: " + e.Error())
-		panic(e.Error())
-	default:
-		Alert("OnPanic: unknown panic")
-		panic("unknown panic")
-	}
+	Panic(r)
 }
