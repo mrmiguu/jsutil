@@ -1,7 +1,11 @@
 package jsutil
 
-import "github.com/gopherjs/gopherjs/js"
-import "strings"
+import (
+	"errors"
+	"strings"
+
+	"github.com/gopherjs/gopherjs/js"
+)
 
 var (
 	document  *js.Object
@@ -109,16 +113,41 @@ func Prompt(s ...string) string {
 }
 
 // OnPanic recovers on a panic, filling err.
-func OnPanic(err *error) {
-	e := recover()
+func OnPanic(err ...*error) {
+	r := recover()
 
-	if e == nil {
+	if len(err) > 1 {
+		Alert("OnPanic: too many arguments")
 		return
 	}
 
-	if e, ok := e.(*js.Error); ok {
-		*err = e
-	} else {
-		panic(e)
+	if r == nil {
+		*err[0] = nil
+		return
+	}
+
+	if len(err) > 0 {
+		switch e := r.(type) {
+		case *js.Error:
+			*err[0] = e
+		case string:
+			*err[0] = errors.New(e)
+		case error:
+			*err[0] = e
+		default:
+			Alert("OnPanic: unknown panic")
+		}
+		return
+	}
+
+	switch e := r.(type) {
+	case *js.Error:
+		Alert("panic: " + e.Error())
+	case string:
+		Alert("panic: " + e)
+	case error:
+		Alert("panic: " + e.Error())
+	default:
+		Alert("OnPanic: unknown panic")
 	}
 }
