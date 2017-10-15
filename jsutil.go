@@ -11,7 +11,7 @@ var (
 	document  *js.Object
 	body      *js.Object
 	keyboard  *js.Object
-	keybuffer chan string
+	keybuffer = make(chan string, 4)
 )
 
 func init() {
@@ -24,10 +24,11 @@ func init() {
 	keyboard = document.Call("createElement", "input")
 	keyboard.Set("type", "text")
 	keyboard.Set("id", "keyboard")
-	keyboard.Get("style").Set("top", -23)
+	keyboard.Get("style").Set("top", -230)
 	keyboard.Get("style").Set("opacity", 0.0)
 	keyboard.Get("style").Set("position", "absolute")
 	keyboard.Set("onclick", func() { keyboard.Call("focus") })
+	keyboard.Set("oninput", F(func() { keybuffer <- keyboard.Get("value").String() }))
 	body = document.Get("body")
 	body.Call("appendChild", keyboard)
 }
@@ -68,23 +69,20 @@ func Load(url string, alt ...string) <-chan bool {
 
 // OpenKeyboard pulls up the soft keyboard.
 func OpenKeyboard() <-chan string {
-	keybuffer = make(chan string, 4)
-	keyboard.Set("oninput", F(func() { keybuffer <- keyboard.Get("value").String() }))
+	keyboard.Call("click")
+	js.Global.Call("setTimeout", func() { keyboard.Call("click") }, 1) // Firefox is the only one that needs this
 	// keyboard.Set("onkeypress", fn)
 	// keyboard.Set("onkeyup", fn)
 	// keyboard.Set("onselect", fn)
-	keyboard.Call("click")
 	return keybuffer
 }
 
 // CloseKeyboard forces the soft keyboard away.
 func CloseKeyboard() {
-	close(keybuffer)
-	keyboard.Set("oninput", nil)
+	keyboard.Call("blur")
 	// keyboard.Set("onkeypress", nil)
 	// keyboard.Set("onkeyup", nil)
 	// keyboard.Set("onselect", nil)
-	keyboard.Call("blur")
 }
 
 // F relieves callbacks completely from blocking.
