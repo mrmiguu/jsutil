@@ -93,9 +93,9 @@ func F(f func()) func() {
 }
 
 // C returns a function that when run it fills the following channel.
-func C() (func(), <-chan bool) {
-	c := make(chan bool)
-	return F(func() { c <- true }), c
+func C() (func(...*js.Object), <-chan []*js.Object) {
+	c := make(chan []*js.Object)
+	return func(args ...*js.Object) { go func() { c <- args }() }, c
 }
 
 // Alert calls the global alert function
