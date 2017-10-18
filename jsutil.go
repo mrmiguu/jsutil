@@ -28,7 +28,7 @@ func init() {
 	keyboard.Get("style").Set("opacity", 0.0)
 	keyboard.Get("style").Set("position", "absolute")
 	keyboard.Set("onclick", func() { keyboard.Call("focus") })
-	keyboard.Set("oninput", F(func() { keybuffer <- keyboard.Get("value").String() }))
+	keyboard.Set("oninput", F(func(_ ...*js.Object) { keybuffer <- keyboard.Get("value").String() }))
 	body = document.Get("body")
 	body.Call("appendChild", keyboard)
 }
@@ -55,8 +55,8 @@ func Load(url string, alt ...string) <-chan bool {
 		panic("bad file type")
 	}
 
-	file.Set("onload", F(func() { loaded <- true }))
-	file.Set("onerror", F(func() {
+	file.Set("onload", F(func(_ ...*js.Object) { loaded <- true }))
+	file.Set("onerror", F(func(_ ...*js.Object) {
 		if len(alt) < 1 {
 			loaded <- false
 		} else {
@@ -86,8 +86,8 @@ func CloseKeyboard() {
 }
 
 // F relieves callbacks completely from blocking.
-func F(f func()) func() {
-	return func() { go f() }
+func F(f func(...*js.Object)) func(...*js.Object) {
+	return func(args ...*js.Object) { go f(args...) }
 }
 
 // C returns a function that when run it fills the following channel.
