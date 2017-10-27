@@ -79,6 +79,7 @@ func OpenKeyboard() <-chan string {
 
 // CloseKeyboard forces the soft keyboard away.
 func CloseKeyboard() {
+	keyboard.Set("value", "")
 	keyboard.Call("blur")
 	// keyboard.Set("onkeypress", nil)
 	// keyboard.Set("onkeyup", nil)
