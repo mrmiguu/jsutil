@@ -12,6 +12,7 @@ var (
 	body      *js.Object
 	keyboard  *js.Object
 	keybuffer = make(chan string, 4)
+	keyOpen   bool
 )
 
 func init() {
@@ -27,6 +28,11 @@ func init() {
 	keyboard.Get("style").Set("top", -230)
 	keyboard.Get("style").Set("opacity", 0.0)
 	keyboard.Get("style").Set("position", "absolute")
+	keyboard.Set("onblur", func(e *js.Object) {
+		if keyOpen {
+			e.Call("preventDefault")
+		}
+	})
 	keyboard.Set("onclick", func() { keyboard.Call("focus") })
 	keyboard.Set("oninput", F(func(_ ...*js.Object) { keybuffer <- keyboard.Get("value").String() }))
 	body = document.Get("body")
@@ -69,6 +75,7 @@ func Load(url string, alt ...string) <-chan bool {
 
 // OpenKeyboard pulls up the soft keyboard.
 func OpenKeyboard() <-chan string {
+	keyOpen = true
 	keyboard.Call("click")
 	js.Global.Call("setTimeout", func() { keyboard.Call("click") }, 1) // Firefox is the only one that needs this
 	// keyboard.Set("onkeypress", fn)
@@ -79,6 +86,7 @@ func OpenKeyboard() <-chan string {
 
 // CloseKeyboard forces the soft keyboard away.
 func CloseKeyboard() {
+	keyOpen = false
 	keyboard.Set("value", "")
 	keyboard.Call("blur")
 	// keyboard.Set("onkeypress", nil)
