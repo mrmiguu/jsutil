@@ -28,15 +28,17 @@ func init() {
 	keyboard.Get("style").Set("top", -230)
 	keyboard.Get("style").Set("opacity", 0.0)
 	keyboard.Get("style").Set("position", "absolute")
-	keyboard.Set("onblur", func(e *js.Object) {
-		if keyOpen {
-			e.Call("preventDefault")
-		}
-	})
 	keyboard.Set("onclick", func() { keyboard.Call("focus") })
+	keyboard.Set("onblur", func(e *js.Object) {
+		e.Call("stopPropogation")
+	})
 	keyboard.Set("oninput", F(func(_ ...*js.Object) { keybuffer <- keyboard.Get("value").String() }))
 	body = document.Get("body")
 	body.Call("appendChild", keyboard)
+	// body.Call("onfocus", func(e *js.Object) {
+	// 	e.Call("stopPropogation")
+	// 	e.Call("preventDefault")
+	// })
 }
 
 func extension(file string) string {
@@ -86,9 +88,9 @@ func OpenKeyboard() <-chan string {
 
 // CloseKeyboard forces the soft keyboard away.
 func CloseKeyboard() {
-	keyOpen = false
-	keyboard.Set("value", "")
 	keyboard.Call("blur")
+	keyboard.Set("value", "")
+	keyOpen = false
 	// keyboard.Set("onkeypress", nil)
 	// keyboard.Set("onkeyup", nil)
 	// keyboard.Set("onselect", nil)
