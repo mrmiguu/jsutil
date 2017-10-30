@@ -29,7 +29,7 @@ func init() {
 	keyboard.Get("style").Set("position", "absolute")
 	keyboard.Set("onclick", func() { keyboard.Call("focus") })
 	keyboard.Set("onblur", func(e *js.Object) {
-		e.Call("stopPropogation")
+		e.Call("preventDefault")
 	})
 	keyboard.Set("oninput", F(func(_ ...*js.Object) { keybuffer <- keyboard.Get("value").String() }))
 	body = document.Get("body")
