@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	window    *js.Object
 	document  *js.Object
 	body      *js.Object
 	keyboard  *js.Object
@@ -20,7 +21,10 @@ func init() {
 		return
 	}()
 
+	window = js.Global.Get("window")
 	document = js.Global.Get("document")
+	body = document.Get("body")
+
 	keyboard = document.Call("createElement", "input")
 	keyboard.Set("type", "text")
 	keyboard.Set("id", "keyboard")
@@ -32,7 +36,6 @@ func init() {
 		e.Call("preventDefault")
 	})
 	keyboard.Set("oninput", F(func(_ ...*js.Object) { keybuffer <- keyboard.Get("value").String() }))
-	body = document.Get("body")
 	body.Call("appendChild", keyboard)
 }
 
@@ -68,6 +71,11 @@ func Load(url string, alt ...string) <-chan bool {
 	}))
 	body.Call("appendChild", file)
 	return loaded
+}
+
+// OpenLink opens the URL's web page in the browser.
+func OpenLink(url string) {
+	window.Call("open", url)
 }
 
 // FocusKeyboard pulls up the soft keyboard.
