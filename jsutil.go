@@ -35,7 +35,7 @@ func init() {
 	keyboard.Set("onblur", func(e *js.Object) {
 		e.Call("preventDefault")
 	})
-	keyboard.Set("oninput", F(func(_ ...*js.Object) { keybuffer <- keyboard.Get("value").String() }))
+	keyboard.Set("oninput", func() { go func() { keybuffer <- keyboard.Get("value").String() }() })
 	body.Call("appendChild", keyboard)
 }
 
@@ -61,8 +61,8 @@ func Load(url string, alt ...string) <-chan bool {
 		panic("bad file type")
 	}
 
-	file.Set("onload", F(func(_ ...*js.Object) { loaded <- true }))
-	file.Set("onerror", F(func(_ ...*js.Object) {
+	file.Set("onload", F(func() { loaded <- true }))
+	file.Set("onerror", F(func() {
 		if len(alt) < 1 {
 			loaded <- false
 		} else {
@@ -75,7 +75,7 @@ func Load(url string, alt ...string) <-chan bool {
 
 // OpenLink opens the URL's web page in the browser.
 func OpenLink(url string) {
-	window.Call("open", url)
+	window.Call("open", url, "_blank")
 }
 
 // FocusKeyboard pulls up the soft keyboard.
@@ -103,14 +103,14 @@ func BlurKeyboard() {
 }
 
 // F relieves callbacks completely from blocking.
-func F(f func(...*js.Object)) func(...*js.Object) {
-	return func(args ...*js.Object) { go f(args...) }
+func F(f func()) func() {
+	return func() { go f() }
 }
 
 // C returns a function that when run it fills the following channel.
-func C() (func(...*js.Object), <-chan []*js.Object) {
-	c := make(chan []*js.Object)
-	return func(args ...*js.Object) { go func() { c <- args }() }, c
+func C() (func(), <-chan bool) {
+	c := make(chan bool)
+	return func() { go func() { c <- true }() }, c
 }
 
 // Alert calls the global alert function
