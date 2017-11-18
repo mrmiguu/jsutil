@@ -73,9 +73,9 @@ func Load(url string, alt ...string) <-chan bool {
 	return loaded
 }
 
-// OpenLink opens the URL's web page in the browser.
-func OpenLink(url string) {
-	window.Call("open", url, "_blank")
+// Redirect changes the browser's current web page.
+func Redirect(url string) {
+	js.Global.Get("window").Get("location").Set("href", url)
 }
 
 // FocusKeyboard pulls up the soft keyboard.
