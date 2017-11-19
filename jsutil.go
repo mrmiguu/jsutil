@@ -75,7 +75,35 @@ func Load(url string, alt ...string) <-chan bool {
 
 // Redirect changes the browser's current web page.
 func Redirect(url string) {
-	js.Global.Get("window").Get("location").Set("href", url)
+	window.Get("location").Set("href", url)
+}
+
+// Cookie is a map of cookie keys to values.
+type Cookie map[string]string
+
+// StoreCookie sets the current document's cookie to all key-values.
+func StoreCookie(c Cookie) {
+	var kvs []string
+	for k, v := range c {
+		kvs = append(kvs, k+"="+v)
+	}
+	document.Set("cookie", strings.Join(kvs, "%"))
+}
+
+// LoadCookie gets the current document's cookie of all key-values.
+func LoadCookie() Cookie {
+	c := Cookie{}
+	cookie := document.Get("cookie").String()
+	if len(cookie) == 0 {
+		return c
+	}
+	println("cookie", cookie)
+	kvs := strings.Split(cookie, "%")
+	for _, kv := range kvs {
+		piv := strings.Index(kv, "=")
+		c[kv[:piv]] = kv[piv+1:]
+	}
+	return c
 }
 
 // FocusKeyboard pulls up the soft keyboard.
