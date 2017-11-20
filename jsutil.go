@@ -106,6 +106,16 @@ func LoadCookie() Cookie {
 	return c
 }
 
+// ReadBlob reads a blob into a byte slice.
+func ReadBlob(blob *js.Object) []byte {
+	r := js.Global.Get("FileReader").New()
+	f, c := C()
+	r.Set("onload", f)
+	r.Call("readAsArrayBuffer", blob)
+	<-c
+	return js.Global.Get("Uint8Array").New(r.Get("result")).Interface().([]byte)
+}
+
 // FocusKeyboard pulls up the soft keyboard.
 func FocusKeyboard() <-chan string {
 	keyboard.Call("click")
