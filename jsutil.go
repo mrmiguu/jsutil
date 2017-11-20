@@ -1,7 +1,12 @@
 package jsutil
 
 import (
+	"compress/gzip"
 	"errors"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/gopherjs/gopherjs/js"
@@ -115,6 +120,61 @@ func FetchBlob(blob *js.Object) <-chan []byte {
 	}))
 	r.Call("readAsArrayBuffer", blob)
 	return c
+}
+
+// Compile compiles and minifies the path using GopherJS.
+func Compile(path string) error {
+	home, err := filepath.Abs(".")
+	if err != nil {
+		return err
+	}
+	dir, file := filepath.Split(path)
+
+	// switch to the directory
+	err = os.Chdir(dir)
+	if err != nil {
+		return err
+	}
+
+	// actually compile
+	out, err := exec.Command("gopherjs", "build", "-m", file).Output()
+	if err != nil {
+		return err
+	}
+	if len(out) > 0 {
+		return errors.New(string(out))
+	}
+
+	// switch back to home
+	return os.Chdir(home)
+}
+
+// CompileWithGZip compiles, minifies, and compresses the path using GopherJS and gzip.
+func CompileWithGZip(path string) error {
+	err := Compile(path)
+	if err != nil {
+		return err
+	}
+	base := path[:strings.Index(path, filepath.Ext(path))]
+	js, err := ioutil.ReadFile(base + ".js")
+	if err != nil {
+		return err
+	}
+	if err = os.Remove(base + ".js"); err != nil {
+		return err
+	}
+	gz, err := os.Create(base + ".gz")
+	if err != nil {
+		return err
+	}
+	w := gzip.NewWriter(gz)
+	if _, err = w.Write(js); err != nil {
+		return err
+	}
+	if err = w.Close(); err != nil {
+		return err
+	}
+	return gz.Close()
 }
 
 // FocusKeyboard pulls up the soft keyboard.
