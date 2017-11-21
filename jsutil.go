@@ -149,8 +149,8 @@ func Compile(path string) error {
 	return os.Chdir(home)
 }
 
-// CompileWithGZip compiles, minifies, and compresses the path using GopherJS and gzip.
-func CompileWithGZip(path string) error {
+// CompileWithGzip compiles, minifies, and compresses the path using GopherJS and gzip.
+func CompileWithGzip(path string) error {
 	err := Compile(path)
 	if err != nil {
 		return err
@@ -163,7 +163,7 @@ func CompileWithGZip(path string) error {
 	if err = os.Remove(base + ".js"); err != nil {
 		return err
 	}
-	gz, err := os.Create(base + ".gz")
+	gz, err := os.Create(base + ".js.gz")
 	if err != nil {
 		return err
 	}
