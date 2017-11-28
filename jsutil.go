@@ -181,7 +181,6 @@ func CompileWithGzip(path string) error {
 func FocusKeyboard() <-chan string {
 	keyboard.Call("click")
 	js.Global.Call("setTimeout", func() { keyboard.Call("click") }, 1) // Firefox is the only one that needs this
-	keyboard.Set("value", "")
 	// keyboard.Set("onkeypress", fn)
 	// keyboard.Set("onkeyup", fn)
 	// keyboard.Set("onselect", fn)
