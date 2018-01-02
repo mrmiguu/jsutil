@@ -243,33 +243,20 @@ func Panic(arg interface{}) {
 }
 
 // OnPanic recovers on a panic, filling err.
-func OnPanic(err ...*error) {
+func OnPanic(err *error) {
 	r := recover()
-
-	if len(err) > 1 {
-		Alert("OnPanic: too many arguments")
-		panic("too many arguments")
-	}
-
 	if r == nil {
-		*err[0] = nil
 		return
 	}
-
-	if len(err) > 0 {
-		switch e := r.(type) {
-		case *js.Error:
-			*err[0] = e
-		case string:
-			*err[0] = errors.New(e)
-		case error:
-			*err[0] = e
-		default:
-			Alert("OnPanic: unknown panic")
-			panic("unknown panic")
-		}
-		return
+	switch e := r.(type) {
+	case *js.Error:
+		*err = e
+	case string:
+		*err = errors.New(e)
+	case error:
+		*err = e
+	default:
+		Alert("OnPanic: unknown panic")
+		panic("unknown panic")
 	}
-
-	Panic(r)
 }
