@@ -30,18 +30,18 @@ func init() {
 	document = js.Global.Get("document")
 	body = document.Get("body")
 
-	keyboard = document.Call("createElement", "input")
-	keyboard.Set("type", "text")
-	keyboard.Set("id", "keyboard")
-	keyboard.Get("style").Set("top", -230)
-	keyboard.Get("style").Set("opacity", 0.0)
-	keyboard.Get("style").Set("position", "absolute")
-	keyboard.Set("onclick", func() { keyboard.Call("focus") })
-	keyboard.Set("onblur", func(e *js.Object) {
-		e.Call("preventDefault")
-	})
-	keyboard.Set("oninput", func() { go func() { keybuffer <- keyboard.Get("value").String() }() })
-	body.Call("appendChild", keyboard)
+	// keyboard = document.Call("createElement", "input")
+	// keyboard.Set("type", "text")
+	// keyboard.Set("id", "keyboard")
+	// keyboard.Get("style").Set("top", -230)
+	// keyboard.Get("style").Set("opacity", 0.0)
+	// keyboard.Get("style").Set("position", "absolute")
+	// keyboard.Set("onclick", func() { keyboard.Call("focus") })
+	// keyboard.Set("onblur", func(e *js.Object) {
+	// 	e.Call("preventDefault")
+	// })
+	// keyboard.Set("oninput", func() { go func() { keybuffer <- keyboard.Get("value").String() }() })
+	// body.Call("appendChild", keyboard)
 }
 
 func extension(file string) string {
@@ -238,7 +238,12 @@ func Panic(arg interface{}) {
 	default:
 		err = "unknown panic"
 	}
-	Alert("panic: " + err)
+	body := js.Global.Get("document").Get("body")
+	body.Get("style").Set("background-color", "black")
+	body.Get("style").Set("color", "white")
+	body.Get("style").Set("font-family", "Courier New, Courier, monospace")
+	body.Get("style").Set("font-size", "2.5vh")
+	body.Set("innerHTML", "panic: "+err)
 	panic(err)
 }
 
