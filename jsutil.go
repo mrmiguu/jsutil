@@ -225,7 +225,7 @@ func Prompt(s ...string) string {
 	return js.Global.Call("prompt", msg).String()
 }
 
-// Panic panics in a JavaScript-friendly way.
+// Panic panics in a web-friendly way.
 func Panic(arg interface{}) {
 	var err string
 	switch x := arg.(type) {
@@ -242,7 +242,8 @@ func Panic(arg interface{}) {
 	body.Get("style").Set("background-color", "black")
 	body.Get("style").Set("color", "white")
 	body.Get("style").Set("font-family", "Courier New, Courier, monospace")
-	body.Get("style").Set("font-size", "2.5vh")
+	body.Get("style").Set("font-size", "2.5vmin")
+	body.Get("style").Set("text-align", "center")
 	body.Set("innerHTML", "panic: "+err)
 	panic(err)
 }
