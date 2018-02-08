@@ -3,7 +3,9 @@ package jsutil
 import (
 	"compress/gzip"
 	"errors"
+	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -120,6 +122,25 @@ func FetchBlob(blob *js.Object) <-chan []byte {
 	}))
 	r.Call("readAsArrayBuffer", blob)
 	return c
+}
+
+// Open opens a file on the server.
+func Open(path string) (io.ReadCloser, error) {
+	if js.Global == nil { // we're on the server
+		return os.Open(path)
+	}
+	i := strings.Index(path, "/")
+	if i == -1 {
+		return nil, errors.New("jsutil.Open: folder not found")
+	}
+	resp, err := http.Get(path[i:])
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode >= 300 {
+		return nil, errors.New("jsutil.Open: " + resp.Status)
+	}
+	return resp.Body, nil
 }
 
 // Compile compiles and minifies the path using GopherJS.
